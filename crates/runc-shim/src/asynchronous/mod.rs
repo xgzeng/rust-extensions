@@ -20,13 +20,9 @@ use ::runc::options::DeleteOpts;
 use async_trait::async_trait;
 use containerd_shim::{
     asynchronous::{
-        container::Container,
         monitor::{monitor_subscribe, monitor_unsubscribe, Subscription},
-        processes::Process,
         publisher::RemotePublisher,
-        spawn,
-        task::TaskService,
-        ExitSignal, Shim,
+        spawn, ExitSignal, Shim,
     },
     event::Event,
     io_error,
@@ -45,7 +41,15 @@ use crate::{
     common::{create_runc, has_shared_pid_namespace, ShimExecutor, GROUP_LABELS},
 };
 
+mod console;
+mod container;
+mod processes;
 mod runc;
+mod task;
+
+use container::Container;
+use processes::Process;
+use task::TaskService;
 
 pub(crate) struct Service {
     exit: Arc<ExitSignal>,
