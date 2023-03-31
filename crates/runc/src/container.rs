@@ -48,6 +48,7 @@ pub struct Container {
     pub rootfs: String,
     #[serde(with = "rfc3339")]
     pub created: OffsetDateTime,
+    #[serde(default)]
     pub annotations: HashMap<String, String>,
 }
 
