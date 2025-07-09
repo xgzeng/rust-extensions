@@ -36,7 +36,7 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
-use time::{serde::timestamp, OffsetDateTime};
+use time::{serde::timestamp, serde::rfc3339, OffsetDateTime};
 
 /// Information for runc container
 #[derive(Debug, Serialize, Deserialize)]
@@ -46,8 +46,9 @@ pub struct Container {
     pub status: String,
     pub bundle: String,
     pub rootfs: String,
-    #[serde(with = "timestamp")]
+    #[serde(with = "rfc3339")]
     pub created: OffsetDateTime,
+    #[serde(default)]
     pub annotations: HashMap<String, String>,
 }
 
@@ -82,5 +83,36 @@ mod tests {
         );
         assert_eq!(c.annotations.get("foo"), Some(&"bar".to_string()));
         assert_eq!(c.annotations.get("bar"), None);
+    }
+
+    #[test]
+    fn serde_test2() {
+        use time::{Date, Month, Time};
+        let j = r#"
+            {
+                "ociVersion":"1.2.0",
+                "id":"fake",
+                "pid":1000,
+                "status":"running",
+                "bundle":"/path/to/bundle",
+                "rootfs":"/path/to/rootfs",
+                "created":"2025-07-09T03:17:42.107242309Z",
+                "owner":"root"
+            }"#;
+         
+        let c: Container = serde_json::from_str(j).unwrap();
+        assert_eq!(c.id, "fake");
+        assert_eq!(c.pid, 1000);
+        assert_eq!(c.status, "running");
+        assert_eq!(c.bundle, "/path/to/bundle");
+        assert_eq!(c.rootfs, "/path/to/rootfs");
+        assert_eq!(
+            c.created,
+            OffsetDateTime::new_utc(
+                Date::from_calendar_date(2025, Month::July, 9).unwrap(),
+                Time::from_hms_nano(3, 17, 42, 107_242_309).unwrap()
+            )
+        );
+        assert!(c.annotations.is_empty());
     }
 }
